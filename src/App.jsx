@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Chat from './pages/Chat';
-import Discover from './pages/Discover';
+import Profile from './pages/Profile';
 import PropTypes from 'prop-types';
 
 // Protected Route Component
@@ -93,10 +93,10 @@ function App() {
             }
           />
           <Route
-            path="/discover"
+            path="/profile"
             element={
               <ProtectedRoute>
-                <Discover />
+                <Profile />
               </ProtectedRoute>
             }
           />

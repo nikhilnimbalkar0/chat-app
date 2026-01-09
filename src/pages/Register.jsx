@@ -4,11 +4,13 @@ import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
     const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [usernameAvailable, setUsernameAvailable] = useState(null);
 
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -16,6 +18,17 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Validate username
+        if (!username.trim() || username.length < 3) {
+            setError('Username must be at least 3 characters');
+            return;
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            setError('Username can only contain letters, numbers, and underscores');
+            return;
+        }
 
         // Check if passwords match
         if (password !== confirmPassword) {
@@ -26,7 +39,7 @@ const Register = () => {
         setLoading(true);
 
         try {
-            await register(name, email, password);
+            await register(name, email, password, username);
             navigate('/chat');
         } catch (err) {
             setError(err.message);
@@ -83,6 +96,24 @@ const Register = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                 placeholder="John Doe"
                             />
+                        </div>
+
+                        {/* Username Input */}
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                                Username
+                            </label>
+                            <input
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                                required
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                placeholder="johndoe"
+                                pattern="[a-zA-Z0-9_]+"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Letters, numbers, and underscores only</p>
                         </div>
 
                         {/* Email Input */}

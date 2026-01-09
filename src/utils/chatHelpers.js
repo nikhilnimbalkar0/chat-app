@@ -57,6 +57,7 @@ export const sendMessage = async (chatId, senderId, text) => {
         // Add message to subcollection
         const messagesRef = collection(db, 'chats', chatId, 'messages');
         await addDoc(messagesRef, {
+            type: 'text',
             text: text.trim(),
             senderId,
             createdAt: serverTimestamp()
@@ -70,6 +71,34 @@ export const sendMessage = async (chatId, senderId, text) => {
         });
     } catch (error) {
         console.error('Error sending message:', error);
+        throw error;
+    }
+};
+
+/**
+ * Send a media message (image or video)
+ */
+export const sendMediaMessage = async (chatId, senderId, mediaURL, type, caption = '') => {
+    try {
+        // Add media message to subcollection
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+        await addDoc(messagesRef, {
+            type, // 'image' or 'video'
+            mediaURL,
+            text: caption,
+            senderId,
+            createdAt: serverTimestamp()
+        });
+
+        // Update lastMessage in chat document
+        const chatRef = doc(db, 'chats', chatId);
+        const lastMessageText = type === 'image' ? '📷 Photo' : '🎥 Video';
+        await updateDoc(chatRef, {
+            lastMessage: caption || lastMessageText,
+            updatedAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error('Error sending media message:', error);
         throw error;
     }
 };

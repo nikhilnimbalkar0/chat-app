@@ -4,6 +4,7 @@ import {
     addDoc,
     updateDoc,
     deleteDoc,
+    getDoc,
     query,
     where,
     getDocs,
@@ -50,16 +51,27 @@ export const sendFriendRequest = async (senderId, receiverId) => {
  */
 export const acceptFriendRequest = async (requestId, senderId, receiverId) => {
     try {
-        // Update request status
-        const requestRef = doc(db, 'friendRequests', requestId);
-        await updateDoc(requestRef, {
-            status: 'accepted'
-        });
-
-        // Add each user to the other's friends array
         const senderRef = doc(db, 'users', senderId);
         const receiverRef = doc(db, 'users', receiverId);
 
+        // Get both user documents to check if friends field exists
+        const [senderDoc, receiverDoc] = await Promise.all([
+            getDoc(senderRef),
+            getDoc(receiverRef)
+        ]);
+
+        // Initialize friends array if it doesn't exist
+        const senderData = senderDoc.data();
+        const receiverData = receiverDoc.data();
+
+        if (!senderData.friends) {
+            await updateDoc(senderRef, { friends: [] });
+        }
+        if (!receiverData.friends) {
+            await updateDoc(receiverRef, { friends: [] });
+        }
+
+        // Add each user to the other's friends array
         await updateDoc(senderRef, {
             friends: arrayUnion(receiverId)
         });
@@ -67,6 +79,10 @@ export const acceptFriendRequest = async (requestId, senderId, receiverId) => {
         await updateDoc(receiverRef, {
             friends: arrayUnion(senderId)
         });
+
+        // Delete the friend request after successful acceptance
+        const requestRef = doc(db, 'friendRequests', requestId);
+        await deleteDoc(requestRef);
 
         return true;
     } catch (error) {
@@ -168,7 +184,7 @@ export const subscribeToPendingRequests = (userId, callback) => {
 export const areFriends = async (userId, targetUserId) => {
     try {
         const userRef = doc(db, 'users', userId);
-        const userDoc = await getDocs(userRef);
+        const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
             const friends = userDoc.data().friends || [];

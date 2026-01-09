@@ -3,13 +3,14 @@ import PropTypes from 'prop-types';
 import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import SearchUser from './SearchUser';
 
 const Sidebar = ({ selectedUser, onSelectUser }) => {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showSearch, setShowSearch] = useState(false);
     const { user: currentUser } = useAuth();
-    const navigate = useNavigate();
+    // The 'navigate' variable and its import are removed as per the instruction's diff.
 
     // Fetch friends list
     useEffect(() => {
@@ -130,7 +131,7 @@ const Sidebar = ({ selectedUser, onSelectUser }) => {
                             Add friends to start chatting
                         </p>
                         <button
-                            onClick={() => navigate('/discover')}
+                            onClick={() => setShowSearch(true)}
                             className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md"
                         >
                             Find Friends
@@ -180,8 +181,8 @@ const Sidebar = ({ selectedUser, onSelectUser }) => {
                         {/* Find More Friends Button */}
                         <div className="p-4 border-t border-gray-200">
                             <button
-                                onClick={() => navigate('/discover')}
-                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-all flex items-center justify-center space-x-2"
+                                onClick={() => setShowSearch(true)}
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg transition-all flex items-center justify-center space-x-2 hover:from-indigo-700 hover:to-purple-700 shadow-md"
                             >
                                 <svg
                                     className="w-5 h-5"
@@ -193,15 +194,19 @@ const Sidebar = ({ selectedUser, onSelectUser }) => {
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                         strokeWidth={2}
-                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                     />
                                 </svg>
-                                <span>Find More Friends</span>
+                                <span>Find Friends</span>
                             </button>
                         </div>
                     </>
                 )}
             </div>
+
+            {showSearch && (
+                <SearchUser onClose={() => setShowSearch(false)} />
+            )}
         </div>
     );
 };

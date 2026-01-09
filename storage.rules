@@ -7,33 +7,35 @@ service firebase.storage {
       return request.auth != null;
     }
     
-    // Helper function to validate image file
-    function isImage() {
-      return request.resource.contentType.matches('image/.*');
+    // Helper function to check if user is the owner
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
     
-    // Helper function to check file size (max 5MB)
-    function isValidSize() {
-      return request.resource.size < 5 * 1024 * 1024;
-    }
-    
-    // Chat images
-    match /chat-images/{userId}/{imageId} {
-      // Anyone authenticated can read images
+    // Profile photos
+    match /profile-photos/{userId}/{fileName} {
+      // Anyone authenticated can read profile photos
       allow read: if isAuthenticated();
       
-      // Users can only upload to their own folder
-      // Must be an image and under 5MB
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == userId &&
-                       isImage() &&
-                       isValidSize();
+      // Only the owner can upload/update their profile photo
+      allow write: if isAuthenticated() && 
+        isOwner(userId) &&
+        request.resource.size < 5 * 1024 * 1024 && // 5MB limit
+        request.resource.contentType.matches('image/.*');
+    }
+    
+    // Chat media (images and videos)
+    match /chat-media/{chatId}/{mediaType}/{fileName} {
+      // Anyone authenticated can read chat media
+      allow read: if isAuthenticated();
       
-      // Users can delete their own images
-      allow delete: if isAuthenticated() && request.auth.uid == userId;
-      
-      // Images cannot be updated
-      allow update: if false;
+      // Authenticated users can upload media
+      // Note: Additional validation should be done in Firestore rules
+      // to ensure users can only upload to chats they're part of
+      allow write: if isAuthenticated() &&
+        request.resource.size < 10 * 1024 * 1024 && // 10MB limit
+        (request.resource.contentType.matches('image/.*') || 
+         request.resource.contentType.matches('video/.*'));
     }
   }
 }

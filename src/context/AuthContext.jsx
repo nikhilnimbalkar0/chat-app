@@ -43,15 +43,19 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // Register function
-    const register = async (name, email, password) => {
+    const register = async (name, email, password, username) => {
         try {
             // Validation
-            if (!name || !email || !password) {
+            if (!name || !email || !password || !username) {
                 throw new Error('All fields are required');
             }
 
             if (name.trim().length < 2) {
                 throw new Error('Name must be at least 2 characters long');
+            }
+
+            if (username.trim().length < 3) {
+                throw new Error('Username must be at least 3 characters long');
             }
 
             // Email validation
@@ -69,8 +73,8 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const firebaseUser = userCredential.user;
 
-            // Create user document in Firestore
-            await createUserDocument(firebaseUser.uid, name.trim(), email.toLowerCase().trim());
+            // Create user document in Firestore with username
+            await createUserDocument(firebaseUser.uid, name.trim(), email.toLowerCase().trim(), username.trim());
 
             return firebaseUser;
         } catch (error) {
