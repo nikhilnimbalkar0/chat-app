@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to validate image file
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper function to check file size (max 5MB)
+    function isValidSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+    
+    // Chat images
+    match /chat-images/{userId}/{imageId} {
+      // Anyone authenticated can read images
+      allow read: if isAuthenticated();
+      
+      // Users can only upload to their own folder
+      // Must be an image and under 5MB
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       isImage() &&
+                       isValidSize();
+      
+      // Users can delete their own images
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Images cannot be updated
+      allow update: if false;
+    }
+  }
+}
